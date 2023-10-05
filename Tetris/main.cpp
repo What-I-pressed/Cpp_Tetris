@@ -26,7 +26,6 @@ std::string loadBestScore() {
     return text;
 }
 
-
 class Background {                              
     sf::RectangleShape background;
     sf::RectangleShape gameArea;
@@ -73,7 +72,17 @@ public:
 };
 
 struct Blocks {
+    enum {
+        Red = 0,
+        Blue = 1,
+        Yellow = 2,
+        Magenta = 3,
+        Green = 4
+    };
+
     std::vector<sf::RectangleShape> blocks;
+    sf::Color color;
+    sf::Color initialColor;
     static short prevColor;
 
     Blocks() {
@@ -81,44 +90,42 @@ struct Blocks {
         blocks.push_back(sf::RectangleShape(sf::Vector2f(60, 60)));
         blocks.push_back(sf::RectangleShape(sf::Vector2f(60, 60)));
         blocks.push_back(sf::RectangleShape(sf::Vector2f(60, 60)));
+        chooseColor();
+    }
+
+    void chooseColor() {
+        short rando = rand() % 5;
+        prevColor = rando == prevColor ? (rando + 1) % 5 : rando;
+        switch (prevColor) {
+        case Red:
+            color = color.Red;
+            break;
+        case Blue:
+            color = color.Blue;
+            break;
+        case Yellow:
+            color = sf::Color(239, 239, 42);
+            break;
+        case Magenta:
+            color = color.Magenta;
+            break;
+        case Green:
+            color = color.Green;
+            break;
+        }
+        initialColor = color;
         setColor();
+        setOutline();
     }
 
     void setColor() {
-        short n = rand() % 5 == prevColor ? (rand() + 1) % 5 : rand() % 5;
-        prevColor = n;
-        switch (n) {
-        case 0:
-            color(sf::Color::Red);
-            outline();
-            break;
-        case 1:
-            color(sf::Color::Blue);
-            outline();
-            break;
-        case 2:
-            color(sf::Color(239, 239, 42));
-            outline();
-            break;
-        case 3:
-            color(sf::Color::Magenta);
-            outline();
-            break;
-        case 4:
-            color(sf::Color::Green);
-            outline();
-            break;
-        }
-    }
-
-    void color(sf::Color color) {
         blocks[0].setFillColor(color);
         blocks[1].setFillColor(color);
         blocks[2].setFillColor(color);
         blocks[3].setFillColor(color);
     }
 
-    void outline() {
+    void setOutline() {
         blocks[0].setOutlineThickness(-2);
         blocks[1].setOutlineThickness(-2);
         blocks[2].setOutlineThickness(-2);
@@ -146,7 +153,7 @@ struct Blocks {
         }
     }
 
-    bool isIn(sf::Vector2f vec) {
+    bool isIn(sf::Vector2f vec)const {
         for (short i = 0; i < blocks.size(); i++) {
             if (vec == blocks[i].getPosition()) {
                 return true;
@@ -159,10 +166,20 @@ struct Blocks {
         return blocks[index % 4].getPosition();
     }
 
-    void draw(sf::RenderWindow& window) {
+    void draw(sf::RenderWindow& window)const {
         for (sf::RectangleShape r : blocks) {
             window.draw(r);
         }
+    }
+
+    void changeColor() {
+        color = sf::Color((color.r >= 20 ? color.r - 20 : color.r), (color.g >= 20 ? color.g - 20 : color.g), (color.b >= 20 ? color.b - 20 : color.b));
+        setColor();
+    }
+
+    void setInitialColor() {
+        color = initialColor;
+        setColor();
     }
 };
 
@@ -195,9 +212,13 @@ public:
         this->angle %= 360;
     }
 
-    virtual void rotate() = 0;
+    void rotate() {
+        increaseAngle();
+    }
 
-    virtual void rotateBack() = 0;
+    void rotateBack() {
+        increaseAngle(-90);
+    }
 };
 
 
@@ -226,14 +247,6 @@ public:
             shape().setPos(3, x - 60, y + 120);
         }
     }
-
-    void rotate()override {
-        increaseAngle();
-    }
-
-    void rotateBack()override {
-        increaseAngle(-90);
-    }
 };
 
 class S : public Shape_ {
@@ -260,14 +273,6 @@ public:
             shape().setPos(3, x + 60, y + 120);
         }
     }
-
-    void rotate()override {
-        increaseAngle();
-    }
-
-    void rotateBack()override {
-        increaseAngle(-90);
-    }
 };
 
 class O : public Shape_ {
@@ -285,14 +290,6 @@ public:
         shape().setPos(1, x, y);
         shape().setPos(2, x - 60, y + 60);
         shape().setPos(3, x, y + 60);
-    }
-
-    void rotate()override {
-        increaseAngle();
-    }
-
-    void rotateBack()override {
-        increaseAngle(-90);
     }
 };
 
@@ -319,14 +316,6 @@ public:
             shape().setPos(2, x + 60, y);
             shape().setPos(3, x + 120, y);
         }
-    }
-
-    void rotate()override {
-        increaseAngle();
-    }
-
-    void rotateBack()override {
-        increaseAngle(-90);
     }
 };
 
@@ -366,14 +355,6 @@ public:
             shape().setPos(3, x - 60, y);
         }
     }
-
-    void rotate()override {
-        increaseAngle();
-    }
-
-    void rotateBack()override {
-        increaseAngle(-90);
-    }
 };
 
 class J : public Shape_ {
@@ -412,14 +393,6 @@ public:
             shape().setPos(3, x + 60, y  + 60);
         }
     }
-
-    void rotate()override {
-        increaseAngle();
-    }
-
-    void rotateBack()override {
-        increaseAngle(-90);
-    }
 };
 
 class T : public Shape_ {
@@ -454,14 +427,6 @@ public:
             shape().setPos(2, x + 60, y + 60);
             shape().setPos(3, x, y + 120);
         }
-    }
-
-    void rotate()override {
-        increaseAngle();
-    }
-
-    void rotateBack()override {
-        increaseAngle(-90);
     }
 };
 
@@ -606,13 +571,11 @@ public:
         shapes[shapes.size() - 1] = shape;
         shape.createNew();
         shapes.push_back(shape);
-
     }
 
     bool isIntersect() {
         sf::FloatRect bounds = background.getBounds();
         std::vector<sf::Vector2f> vec;
-        
         if (!bounds.contains(shape.getShape().blocks[0].getPosition()) ||
             !bounds.contains(shape.getShape().blocks[1].getPosition()) ||
             !bounds.contains(shape.getShape().blocks[2].getPosition()) ||
@@ -764,7 +727,11 @@ public:
 class Tetris {                                      //MVC. Tetris = Controller
     Model model;
     View view;
+    bool wait;
+    bool pause;
 public:
+    Tetris() : pause(false) {};
+
     void drawGame(sf::RenderWindow& window) {
         view.drawBackground(model, window);
         view.drawGameArea(model, window);
@@ -783,19 +750,15 @@ public:
                 }
             }
             model.origin();
+            model.getPlayableShape().getShape_()->shape().setInitialColor();
             model.createNewShape();
-            for (short y = 920; y > 20; y -= 60) {
-                if (model.rowIsFull(y)) {
-                    model.removeRow(y);
-                    model.levelDown(y);
-                }
-            }
+            checkDeleteRow();
         }
         model.addScore(1);
         view.drawPlayableShape(model, window);
     }
 
-    void down(sf::RenderWindow& window) {
+    void down(sf::RenderWindow& window, sf::Clock& time) {
         model.keyS();
         if (model.isIntersect()) {
             if (model.getShapes().size() >= 2) {
@@ -804,15 +767,27 @@ public:
                 }
             }
             model.origin();
-            model.createNewShape();
-            for (short y = 920; y > 20; y -= 60) {
-                if (model.rowIsFull(y)) {
-                    model.removeRow(y);
-                    model.levelDown(y);
-                }
+            model.getPlayableShape().getShape_()->shape().changeColor();
+            wait = true;
+            if (time.getElapsedTime().asSeconds() >= 1) {
+                model.getPlayableShape().getShape_()->shape().setInitialColor();
+                model.createNewShape();
+                checkDeleteRow();
+                wait = false;
             }
         }
+        if (!wait) time.restart();
         view.drawPlayableShape(model, window);
+    }
+
+    void checkDeleteRow() {
+        for (short y = 920; y > 20; y -= 60) {
+            if (model.rowIsFull(y)) {
+                model.removeRow(y);
+                model.levelDown(y);
+                y += 60;
+            }
+        }
     }
 
     void saveRecord(){
@@ -845,8 +820,20 @@ public:
         view.drawPlayableShape(model, window);
    }
 
-   void pause() {
+   void keyEscape(sf::RenderWindow& window) {
+       pause = !pause;
+   }
+
+   bool inPause() {
+       return pause;
+   }
+
+   void putOnPause() {
        sf::sleep(sf::Time(sf::milliseconds(750)));
+   }
+
+   int getSpeed() {
+       return (800 - (float(model.getScore()) / 13.f)) > 180 ? (800 - float((model.getScore() / 13.f))) : 180.f;
    }
 };
 
@@ -856,17 +843,19 @@ void main()
     srand(time(NULL));
 
     sf::RenderWindow window(sf::VideoMode(800, 1000), "My window");
-    window.setFramerateLimit(12);
+    window.setFramerateLimit(30);
 
     Tetris tetris;
     sf::Clock time;
+
+    float speed = tetris.getSpeed();
     while (window.isOpen())
     {
-
-        window.clear(sf::Color(48, 48, 48));
+        if (!tetris.inPause()) {
+            window.clear(sf::Color(48, 48, 48));
+            tetris.drawGame(window);
+        }
         sf::Event event;
-
-        tetris.drawGame(window);
 
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
@@ -888,23 +877,26 @@ void main()
                     else if (event.key.code == sf::Keyboard::R) {
                         tetris.keyR(window);
                     }
+                    else if (event.key.code == sf::Keyboard::Escape) {
+                        tetris.keyEscape(window);
+                    }
                 }
             }
             else {
-                tetris.pause();
+                tetris.putOnPause();
             }
-            
         }
-        if (time.getElapsedTime().asMilliseconds() > 800 && window.hasFocus()) {
-            tetris.down(window);
-            time.restart();
+        if (tetris.inPause()) {
+            tetris.putOnPause();
+            continue;
         }
-        else if(event.type != sf::Event::KeyPressed) {
+        speed = tetris.getSpeed();
+        if (time.getElapsedTime().asMilliseconds() > speed && window.hasFocus()) {
+            tetris.down(window, time);
+        }
+        else if (event.type != sf::Event::KeyPressed) {
             tetris.drawPlayableShape(window);
         }
         window.display();
     }
-
-
-
 }
