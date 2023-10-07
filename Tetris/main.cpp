@@ -5,9 +5,9 @@
 #include <cstdlib>
 #include <fstream>
 
-bool intersects(sf::RectangleShape& r1, sf::RectangleShape& r2) {
-    sf::FloatRect f1(r1.getPosition(), r1.getSize());
-    sf::FloatRect f2(r2.getPosition(), r2.getSize());
+bool intersects(sf::Sprite& r1, sf::Sprite& r2) {
+    sf::IntRect f1(sf::Vector2i(r1.getPosition()), sf::Vector2i(60, 60));
+    sf::IntRect f2(sf::Vector2i(r2.getPosition()), sf::Vector2i(60, 60));
     if (f1.intersects(f2))return true;
     return false;
 }
@@ -29,24 +29,6 @@ std::string loadBestScore() {
 class Background {                              
     sf::RectangleShape background;
     sf::RectangleShape gameArea;
-
-    /*virtual void draw(sf::RenderTarget& target, sf::RenderStates state)const {
-        sf::VertexArray triangleStrip(sf::TriangleStrip, 13);
-        triangleStrip[0].position = sf::Vector2f(740, 1000);
-        triangleStrip[1].position = sf::Vector2f(0, 1000);
-        triangleStrip[2].position = sf::Vector2f(740, 980);
-        triangleStrip[3].position = sf::Vector2f(0, 980);
-        triangleStrip[4].position = sf::Vector2f(20, 980);
-        triangleStrip[5].position = sf::Vector2f(0, 0);
-        triangleStrip[6].position = sf::Vector2f(20, 0);
-        triangleStrip[7].position = sf::Vector2f(20, 20);
-        triangleStrip[8].position = sf::Vector2f(740, 0);
-        triangleStrip[9].position = sf::Vector2f(740, 20);
-        triangleStrip[10].position = sf::Vector2f(600, 20);
-        triangleStrip[11].position = sf::Vector2f(600, 720);
-        triangleStrip[12].position = sf::Vector2f(740, 720);
-
-    }*/
 
 public:
     Background() {
@@ -80,56 +62,53 @@ struct Blocks {
         Green = 4
     };
 
-    std::vector<sf::RectangleShape> blocks;
+    std::vector<sf::Sprite> blocks;
     sf::Color color;
     sf::Color initialColor;
     static short prevColor;
+    sf::Texture texture;
+    sf::Sprite sprite;
 
     Blocks() {
-        blocks.push_back(sf::RectangleShape(sf::Vector2f(60, 60)));
-        blocks.push_back(sf::RectangleShape(sf::Vector2f(60, 60)));
-        blocks.push_back(sf::RectangleShape(sf::Vector2f(60, 60)));
-        blocks.push_back(sf::RectangleShape(sf::Vector2f(60, 60)));
-        chooseColor();
+        texture.loadFromFile("block.png");
+        chooseColore();
+        sprite.setTexture(texture);
+        sprite.setTextureRect(sf::IntRect(0, 0, 60, 60));
+        blocks.push_back(sprite);
+        blocks.push_back(sprite);
+        blocks.push_back(sprite);
+        blocks.push_back(sprite);
+        setColor();
     }
 
-    void chooseColor() {
+    void chooseColore() {
         short rando = rand() % 5;
         prevColor = rando == prevColor ? (rando + 1) % 5 : rando;
         switch (prevColor) {
         case Red:
-            color = color.Red;
+            color = sf::Color::Red;
             break;
         case Blue:
-            color = color.Blue;
+            color = sf::Color(30, 60, 255);
             break;
         case Yellow:
-            color = sf::Color(239, 239, 42);
+            color = sf::Color::Yellow;
             break;
         case Magenta:
-            color = color.Magenta;
+            color = sf::Color::Magenta;
             break;
         case Green:
-            color = color.Green;
+            color = sf::Color::Green;
             break;
         }
         initialColor = color;
-        setColor();
-        setOutline();
     }
 
     void setColor() {
-        blocks[0].setFillColor(color);
-        blocks[1].setFillColor(color);
-        blocks[2].setFillColor(color);
-        blocks[3].setFillColor(color);
-    }
-
-    void setOutline() {
-        blocks[0].setOutlineThickness(-2);
-        blocks[1].setOutlineThickness(-2);
-        blocks[2].setOutlineThickness(-2);
-        blocks[3].setOutlineThickness(-2);
+        blocks[0].setColor(color);
+        blocks[1].setColor(color);
+        blocks[2].setColor(color);
+        blocks[3].setColor(color);
     }
 
     void setPos(short index, short x, short y) {
@@ -167,13 +146,13 @@ struct Blocks {
     }
 
     void draw(sf::RenderWindow& window)const {
-        for (sf::RectangleShape r : blocks) {
+        for (sf::Sprite r : blocks) {
             window.draw(r);
         }
     }
 
     void changeColor() {
-        color = sf::Color((color.r >= 20 ? color.r - 20 : color.r), (color.g >= 20 ? color.g - 20 : color.g), (color.b >= 20 ? color.b - 20 : color.b));
+        color = sf::Color((color.r >= 40 ? color.r - 20 : color.r), (color.g >= 40 ? color.g - 20 : color.g), (color.b >= 40 ? color.b - 20 : color.b));
         setColor();
     }
 
@@ -199,7 +178,7 @@ public:
         return squares;
     }
 
-    sf::RectangleShape& shape(short pos) {
+    sf::Sprite& shape(short pos) {
         return squares.blocks[pos];
     }
 
@@ -547,8 +526,8 @@ public:
     }
 
     bool intersect(Shape_* sh) {
-        for (sf::RectangleShape block : shape[0]->shape().blocks) {
-            for (sf::RectangleShape otherBlock : sh->shape().blocks) {
+        for (sf::Sprite block : shape[0]->shape().blocks) {
+            for (sf::Sprite otherBlock : sh->shape().blocks) {
                 if (intersects(block, otherBlock))return true;
             }
         }
